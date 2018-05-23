@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+	</head>
+	<body>
+		<canvas id="cvs" width="800" height="600"></canvas>
+		<script type="text/javascript" src="js/loadImg.js"></script>
+		
+		<script type="text/javascript">
+			var cvs = document.getElementById('cvs');
+			var ctx = cvs.getContext('2d');
+			
+//			绘制背景
+			var length = 0;
+			function Sky(ctx,img,speed){
+				this.ctx = ctx;
+				this.img = img;
+				this.width = this.img.width;
+				this.height = this.img.height;
+				this.speed = speed||3;
+				length++;
+				this.x = this.width * (length - 1);
+				this.y = 0;
+			}
+			Sky.prototype = {
+				constructor : Sky,
+				draw:function(){
+					this.ctx.drawImage(this.img,this.x,this.y)
+				},
+				update:function(){
+					this.x -= this.speed;
+					if(this.x < -this.width){
+						this.x = this.width;
+					}
+				}
+			
+			}
+			
+		</script>
+		<script type="text/javascript">
+			//小鸟
+			function Bird(ctx,img,widthFrame,heightFrame,x,y){
+				this.ctx = ctx;
+				this.img = img;
+				this.widthframe = widthFrame;
+				this.heightframe = heightFrame;
+				this.x = x;
+			    this.y = y;
+			    //一个小鸟的宽高
+			    this.width = this.img.width / this.widthframe;
+			    this.height = this.img.height / this.heightframe;
+			    
+			    //当前小鸟渲染的帧数 
+			    this.currentFrame = 0;
+			    this.speed = 15;
+			    this.speedPlus = 1;	
+			    this._bind();
+			    
+			}
+			Bird.prototype = {
+				constructor:Bird,
+				draw:function(){
+					this.ctx.drawImage(this.img,
+					this.width * this.currentFrame,0,this.width,this.height,
+					this.x,this.y,this.width,this.height);
+				},
+				update:function(nnnnn){
+					this.currentFrame = ++this.currentFrame >=	 this.widthframe ? 0 : this.currentFrame;
+					this.y += this.speed;
+					this.speed += this.speedPlus;
+				},
+				_bind:function(){
+					var self = this;
+					this.ctx.canvas.addEventListener("click",function(){
+						self.speed  = -5;
+					})
+				}
+			}
+		</script>
+		<script type="text/javascript">
+		   //大地
+		   var len = 0;
+		   function Land(ctx,img,speed){
+		   	   this.ctx = ctx;
+		   	   this.img = img;
+		   	   this.speed = speed || 2;
+		   	   this.width = this.img.width;
+		   	   this.height = this.img.height;
+		   	   len++;
+		   	   this.x = this.width * (len - 1);
+		   	   this.y = this.ctx.canvas.height - this.img.height;
+		   }
+		   Land.prototype = {
+		   	  constructor:Land,
+		   	  draw:function(){
+		   	  	this.ctx.drawImage(this.img,this.x,this.y)
+		   	  },
+		   	  update:function(){
+		   	  	this.x -= this.speed;
+			    this.x += this.x <= -this.img.width ? this.img.width * (len) : 0;
+		   	  }
+		   }
+		</script>
+		<script type="text/javascript">
+			//管道
+			var s = 0
+			function  Pipe(ctx,imgDown,imgUp,space,landHeight,speed){
+				this.ctx = ctx;
+				this.imgDown = imgDown;
+				this.imgUp = imgUp;
+				this.space = space;
+				this.speed = speed;
+				this.width = this.imgDown.width;
+				this.height = this.imgDown.height;
+				this.landHeight = landHeight;
+				s++;
+				this.x = 300 + this.width * 4 * (s - 1);
+				this.y = 0;
+				this._init();
+			}
+			Pipe.prototype = {
+				constructor:Pipe,
+				_init:function(){
+					var pipeDownRenderHeight = Math.random() * ( this.ctx.canvas.height - this.landHeight - this.space - 50 );
+					var maxHeight = pipeDownRenderHeight < 50?50 : pipeDownRenderHeight;
+					this.downY = maxHeight - this.height;
+					this.UpY = maxHeight + this.space; 
+				},
+				draw:function(){
+					this.ctx.drawImage(this.imgDown,this.x,this.downY);
+					this.ctx.drawImage(this.imgUp,this.x,this.UpY);
+					this.drawPath();	
+				},
+				drawPath:function(){
+					this.ctx.rect(this.x,this.downY,this.width,this.height);
+					this.ctx.rect(this.x,this.UpY,this.width,this.height);
+				},
+				update:function(){
+					this.x -= this.speed;
+					if(this.x <= -this.width){
+						this._init();
+						this.x += this.width * 4 * s ;
+					}
+				}
+			}
+		</script>
+		<script type="text/javascript">
+		
+			loadImg({
+				bird:"images/bird.png",
+				land:"images/land.png",
+				pipeDown:"images/pipeDown.png",
+				pipeUp:"images/pipeUp.png",
+				sky:"images/sky.png"
+			},function(imgObj){
+			var sky = new Sky(ctx,imgObj.sky);
+			var sky1 = new Sky(ctx,imgObj.sky);
+			var bird = new Bird(ctx,imgObj.bird,3,1,10,10);
+			var land = new Land(ctx,imgObj.land,10);
+			var land1 = new Land(ctx,imgObj.land,10);
+			var land2 = new Land(ctx,imgObj.land,10);
+			var land3 = new Land(ctx,imgObj.land,10);
+			var pipe = new Pipe(ctx,imgObj.pipeDown,imgObj.pipeUp,100,imgObj.land.height,10);
+			var pipe1 = new Pipe(ctx,imgObj.pipeDown,imgObj.pipeUp,100,imgObj.land.height,10);
+			var pipe2 = new Pipe(ctx,imgObj.pipeDown,imgObj.pipeUp,100,imgObj.land.height,10);
+			var pipe3 = new Pipe(ctx,imgObj.pipeDown,imgObj.pipeUp,100,imgObj.land.height,10);
+			var pipe4 = new Pipe(ctx,imgObj.pipeDown,imgObj.pipeUp,100,imgObj.land.height,10);
+
+			
+			
+			var timer = setInterval(function(){
+				var birdCoreX = bird.x + bird.width/2;
+				var birdCoreY = bird.y + bird.height/2;
+				if(ctx.isPointInPath(birdCoreX,birdCoreY)
+				|| birdCoreY < 0
+				|| birdCoreY > (ctx.canvas.height - imgObj.land.height )){
+					clearInterval(timer);
+					ctx.fillStyle = "rgba(100,100,100,0.8)";
+					ctx.fillRect(0,0,ctx.canvas.width,ctx.canvas.height);
+					ctx.textAlign = "center";
+					ctx.textBaseline = "middle";
+					ctx.fillStyle = "red";
+					ctx.font = "900 40px 微软雅黑";
+					ctx.fillText("GAME OVER !!!",ctx.canvas.width/2,ctx.canvas.height/2);
+					return;
+				}
+			    sky.draw();
+			    sky.update();
+			    sky1.draw();
+			    sky1.update();		
+                bird.draw();
+                bird.update();
+                ctx.beginPath();
+                
+                pipe.draw();
+                pipe.update();
+                pipe1.draw();
+                pipe1.update();
+                pipe2.draw();
+                pipe2.update();
+                pipe3.draw();
+                pipe3.update();
+                pipe4.draw();
+                pipe4.update();
+                
+                land.draw();
+                land.update();
+                land1.draw();
+                land1.update();
+                land2.draw();
+                land2.update();
+                land3.draw();
+                land3.update();
+                
+			},80);
+			})
+
+		</script>
+	</body>
+</html>
